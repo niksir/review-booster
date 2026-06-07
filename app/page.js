@@ -2,6 +2,9 @@
 import { useState } from 'react'
 
 export default function Home() {
+  const [authed, setAuthed] = useState(false)
+  const [codeInput, setCodeInput] = useState('')
+  const [codeError, setCodeError] = useState(false)
   const [step, setStep] = useState(1)
   const [gmbLink, setGmbLink] = useState('')
   const [businessName, setBusinessName] = useState('')
@@ -9,6 +12,15 @@ export default function Home() {
   const [message, setMessage] = useState('')
   const [sending, setSending] = useState(false)
   const [results, setResults] = useState(null)
+
+  const handleCodeSubmit = () => {
+    if (codeInput === process.env.NEXT_PUBLIC_ACCESS_CODE) {
+      setAuthed(true)
+      setCodeError(false)
+    } else {
+      setCodeError(true)
+    }
+  }
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0]
@@ -38,6 +50,32 @@ export default function Home() {
     setStep(3)
   }
 
+  if (!authed) {
+    return (
+      <div style={{maxWidth: 400, margin: '100px auto', padding: 20}}>
+        <div style={{background: 'white', padding: 30, borderRadius: 12, boxShadow: '0 2px 10px rgba(0,0,0,0.1)', textAlign: 'center'}}>
+          <h1 style={{color: '#1a73e8'}}>⭐ Review Booster</h1>
+          <p style={{color: '#666'}}>Εισάγετε τον κωδικό πρόσβασης</p>
+          <input
+            type="password"
+            style={{width: '100%', padding: 10, margin: '8px 0 16px', borderRadius: 8, border: codeError ? '2px solid red' : '1px solid #ddd', boxSizing: 'border-box', fontSize: 18, textAlign: 'center'}}
+            placeholder="••••••••"
+            value={codeInput}
+            onChange={e => setCodeInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleCodeSubmit()}
+          />
+          {codeError && <p style={{color: 'red', margin: '0 0 12px'}}>Λάθος κωδικός!</p>}
+          <button
+            onClick={handleCodeSubmit}
+            style={{width: '100%', padding: 14, background: '#1a73e8', color: 'white', border: 'none', borderRadius: 8, fontSize: 16, cursor: 'pointer'}}
+          >
+            Είσοδος →
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div style={{maxWidth: 600, margin: '40px auto', padding: 20}}>
       <h1 style={{color: '#1a73e8', textAlign: 'center'}}>⭐ Review Booster</h1>
@@ -62,7 +100,7 @@ export default function Home() {
             onChange={e => setGmbLink(e.target.value)}
           />
 
-          <label>Μήνυμα SMS (προαιρετικό)</label>
+          <label>Μήνυμα SMS</label>
           <textarea
             style={{width: '100%', padding: 10, margin: '8px 0 16px', borderRadius: 8, border: '1px solid #ddd', boxSizing: 'border-box', height: 80}}
             placeholder="Σας ευχαριστούμε! Θα μας βοηθούσατε με μια κριτική:"
