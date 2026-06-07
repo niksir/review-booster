@@ -5,6 +5,17 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 )
 
+async function shortenUrl(url) {
+  try {
+    const response = await fetch(
+      `https://tinyurl.com/api-create.php?url=${encodeURIComponent(url)}`
+    )
+    return await response.text()
+  } catch {
+    return url
+  }
+}
+
 async function sendSmsSmsbox(phone, text) {
   const username = process.env.SMSBOX_USERNAME
   const password = process.env.SMSBOX_PASSWORD
@@ -23,7 +34,6 @@ async function sendSmsSmsbox(phone, text) {
   )
   
   const result = await response.text()
-  // Επιστρέφει "20 ..." αν πήγε καλά
   return result.trim().startsWith('20')
 }
 
@@ -31,9 +41,11 @@ export async function POST(request) {
   try {
     const { phones, gmbLink, businessName, message } = await request.json()
 
+    const shortLink = await shortenUrl(gmbLink)
+
     const smsText = message
-      ? `${message} ${gmbLink} - STOP για διαγραφη`
-      : `Ευχαριστουμε απο ${businessName}! Αφηστε μας μια κριτικη στο Google: ${gmbLink} - STOP για διαγραφη`
+      ? `${message} ${shortLink}`
+      : `Ευχαριστουμε απο ${businessName}! Θα μας βοηθουσατε πολυ με μια κριτικη στο Google: ${shortLink}`
 
     const { data: campaign } = await supabase
       .from('campaigns')
