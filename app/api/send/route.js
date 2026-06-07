@@ -6,8 +6,8 @@ const supabase = createClient(
 )
 
 async function sendSmsSmsbox(phone, text) {
-  const username = process.env.niksir
-  const password = process.Nikitas69788700!
+  const username = process.env.SMSBOX_USERNAME
+  const password = process.env.SMSBOX_PASSWORD
   
   const params = new URLSearchParams({
     username,
