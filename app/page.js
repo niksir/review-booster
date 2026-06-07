@@ -10,8 +10,7 @@ export default function Home() {
   const [businessName, setBusinessName] = useState('')
   const [phones, setPhones] = useState([])
   const [message, setMessage] = useState('')
-  const [sending, setSending] = useState(false)
-  const [results, setResults] = useState(null)
+  const [loading, setLoading] = useState(false)
 
   const handleCodeSubmit = () => {
     if (codeInput === process.env.NEXT_PUBLIC_ACCESS_CODE) {
@@ -37,17 +36,18 @@ export default function Home() {
     reader.readAsText(file)
   }
 
-  const handleSend = async () => {
-    setSending(true)
-    const res = await fetch('/api/send', {
+  const handlePayment = async () => {
+    setLoading(true)
+    const res = await fetch('/api/create-payment', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ phones, gmbLink, businessName, message })
     })
     const data = await res.json()
-    setResults(data)
-    setSending(false)
-    setStep(3)
+    if (data.url) {
+      window.location.href = data.url
+    }
+    setLoading(false)
   }
 
   if (!authed) {
@@ -83,7 +83,7 @@ export default function Home() {
       {step === 1 && (
         <div style={{background: 'white', padding: 30, borderRadius: 12, boxShadow: '0 2px 10px rgba(0,0,0,0.1)'}}>
           <h2>Βήμα 1: Στοιχεία Επιχείρησης</h2>
-          
+
           <label>Όνομα Επιχείρησης</label>
           <input
             style={{width: '100%', padding: 10, margin: '8px 0 16px', borderRadius: 8, border: '1px solid #ddd', boxSizing: 'border-box'}}
@@ -131,8 +131,18 @@ export default function Home() {
           />
 
           {phones.length > 0 && (
-            <div style={{background: '#e8f5e9', padding: 12, borderRadius: 8, margin: '16px 0'}}>
-              ✅ Βρέθηκαν <strong>{phones.length}</strong> τηλέφωνα έτοιμα για αποστολή
+            <div>
+              <div style={{background: '#e8f5e9', padding: 16, borderRadius: 8, margin: '16px 0'}}>
+                ✅ Βρέθηκαν <strong>{phones.length}</strong> τηλέφωνα
+              </div>
+
+              <div style={{background: '#f8f9fa', padding: 20, borderRadius: 8, margin: '16px 0', textAlign: 'center'}}>
+                <p style={{fontSize: 16, color: '#666', margin: '0 0 8px'}}>Σύνολο χρέωσης</p>
+                <p style={{fontSize: 36, fontWeight: 'bold', color: '#1a73e8', margin: '0 0 4px'}}>
+                  {(phones.length * 0.09).toFixed(2)}€
+                </p>
+                <p style={{color: '#999', margin: 0}}>{phones.length} SMS x 0.09€</p>
+              </div>
             </div>
           )}
 
@@ -144,28 +154,13 @@ export default function Home() {
               ← Πίσω
             </button>
             <button
-              onClick={handleSend}
-              disabled={phones.length === 0 || sending}
+              onClick={handlePayment}
+              disabled={phones.length === 0 || loading}
               style={{flex: 2, padding: 14, background: phones.length > 0 ? '#1a73e8' : '#ccc', color: 'white', border: 'none', borderRadius: 8, fontSize: 16, cursor: phones.length > 0 ? 'pointer' : 'not-allowed'}}
             >
-              {sending ? '⏳ Αποστολή...' : `📤 Αποστολή σε ${phones.length} πελάτες`}
+              {loading ? '⏳ Παρακαλώ περιμένετε...' : `💳 Πληρωμή ${(phones.length * 0.09).toFixed(2)}€`}
             </button>
           </div>
-        </div>
-      )}
-
-      {step === 3 && results && (
-        <div style={{background: 'white', padding: 30, borderRadius: 12, boxShadow: '0 2px 10px rgba(0,0,0,0.1)', textAlign: 'center'}}>
-          <h2>✅ Η αποστολή ολοκληρώθηκε!</h2>
-          <div style={{fontSize: 48, margin: '20px 0'}}>🎉</div>
-          <p style={{fontSize: 18}}>Στάλθηκαν <strong>{results.sent}</strong> SMS</p>
-          {results.failed > 0 && <p style={{color: 'red'}}>Απέτυχαν: {results.failed}</p>}
-          <button
-            onClick={() => { setStep(1); setPhones([]); setResults(null) }}
-            style={{padding: '14px 30px', background: '#1a73e8', color: 'white', border: 'none', borderRadius: 8, fontSize: 16, cursor: 'pointer', marginTop: 20}}
-          >
-            Νέα Καμπάνια
-          </button>
         </div>
       )}
     </div>
