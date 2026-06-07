@@ -5,18 +5,43 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 )
 
+async function sendSmsSmsbox(phone, text) {
+  const username = process.env.niksir
+  const password = process.Nikitas69788700!
+  
+  const params = new URLSearchParams({
+    username,
+    password,
+    from: 'ReviewBoost',
+    to: phone,
+    text,
+    coding: 'UTF8'
+  })
+
+  const response = await fetch(
+    `https://www.smsbox.gr/httpapi/sendsms.php?${params.toString()}`
+  )
+  
+  const result = await response.text()
+  // Επιστρέφει "20 ..." αν πήγε καλά
+  return result.trim().startsWith('20')
+}
+
 export async function POST(request) {
   try {
     const { phones, gmbLink, businessName, message } = await request.json()
 
-    const smsText = message 
-      ? `${message} ${gmbLink} - STOP για διαγραφή`
-      : `Σας ευχαριστούμε από ${businessName}! Θα μας βοηθούσατε πολύ με μια κριτική στο Google: ${gmbLink} - STOP για διαγραφή`
+    const smsText = message
+      ? `${message} ${gmbLink} - STOP για διαγραφη`
+      : `Ευχαριστουμε απο ${businessName}! Αφηστε μας μια κριτικη στο Google: ${gmbLink} - STOP για διαγραφη`
 
-    // Αποθήκευση campaign στη Supabase
     const { data: campaign } = await supabase
       .from('campaigns')
-      .insert({ name: `Καμπάνια ${new Date().toLocaleDateString('el-GR')}`, status: 'sending', total_sent: phones.length })
+      .insert({
+        name: `Καμπάνια ${new Date().toLocaleDateString('el-GR')}`,
+        status: 'sending',
+        total_sent: phones.length
+      })
       .select()
       .single()
 
@@ -25,27 +50,13 @@ export async function POST(request) {
 
     for (const phone of phones) {
       try {
-        // Αποστολή SMS μέσω Vonage
-        const response = await fetch('https://rest.nexmo.com/sms/json', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            api_key: process.env.VONAGE_API_KEY,
-            api_secret: process.env.VONAGE_API_SECRET,
-            to: phone,
-            from: 'ReviewBoost',
-            text: smsText
-          })
-        })
-
-        const data = await response.json()
+        const success = await sendSmsSmsbox(phone, smsText)
         
-        if (data.messages[0].status === '0') {
+        if (success) {
           sent++
-          // Αποθήκευση στη Supabase
           await supabase.from('recipients').insert({
             campaign_id: campaign.id,
-            phone: phone,
+            phone,
             status: 'sent',
             sent_at: new Date()
           })
@@ -57,7 +68,6 @@ export async function POST(request) {
       }
     }
 
-    // Ενημέρωση campaign status
     await supabase
       .from('campaigns')
       .update({ status: 'done', total_sent: sent })
