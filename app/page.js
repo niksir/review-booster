@@ -38,16 +38,23 @@ export default function Home() {
 
   const handlePayment = async () => {
     setLoading(true)
-    const res = await fetch('/api/create-payment', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phones, gmbLink, businessName, message })
-    })
-    const data = await res.json()
-    if (data.url) {
-      window.location.href = data.url
+    try {
+      const res = await fetch('/api/create-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phones, gmbLink, businessName, message })
+      })
+      const data = await res.json()
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        alert('Σφάλμα: ' + (data.error || 'Άγνωστο σφάλμα'))
+        setLoading(false)
+      }
+    } catch (error) {
+      alert('Σφάλμα: ' + error.message)
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   if (!authed) {
