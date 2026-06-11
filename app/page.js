@@ -57,6 +57,10 @@ export default function Home() {
     }
   }
 
+  const calculated = phones.length * 0.09
+  const finalAmount = calculated < 0.50 ? 0.50 : calculated
+  const isMinimum = calculated < 0.50 && phones.length > 0
+
   if (!authed) {
     return (
       <div style={{maxWidth: 400, margin: '100px auto', padding: 20}}>
@@ -146,9 +150,12 @@ export default function Home() {
               <div style={{background: '#f8f9fa', padding: 20, borderRadius: 8, margin: '16px 0', textAlign: 'center'}}>
                 <p style={{fontSize: 16, color: '#666', margin: '0 0 8px'}}>Σύνολο χρέωσης</p>
                 <p style={{fontSize: 36, fontWeight: 'bold', color: '#1a73e8', margin: '0 0 4px'}}>
-                  {(phones.length * 0.09).toFixed(2)}€
+                  {finalAmount.toFixed(2)}€
                 </p>
-                <p style={{color: '#999', margin: 0}}>{phones.length} SMS x 0.09€</p>
+                {isMinimum
+                  ? <p style={{color: '#999', margin: 0}}>Ελάχιστη χρέωση</p>
+                  : <p style={{color: '#999', margin: 0}}>{phones.length} SMS x 0.09€</p>
+                }
               </div>
             </div>
           )}
@@ -165,7 +172,7 @@ export default function Home() {
               disabled={phones.length === 0 || loading}
               style={{flex: 2, padding: 14, background: phones.length > 0 ? '#1a73e8' : '#ccc', color: 'white', border: 'none', borderRadius: 8, fontSize: 16, cursor: phones.length > 0 ? 'pointer' : 'not-allowed'}}
             >
-              {loading ? '⏳ Παρακαλώ περιμένετε...' : `💳 Πληρωμή ${(phones.length * 0.09).toFixed(2)}€`}
+              {loading ? '⏳ Παρακαλώ περιμένετε...' : `💳 Πληρωμή ${finalAmount.toFixed(2)}€`}
             </button>
           </div>
         </div>
