@@ -33,7 +33,7 @@ export default function Home() {
   const [phones, setPhones] = useState([])
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
-  const [inputMode, setInputMode] = useState('file') // 'file' or 'manual'
+  const [inputMode, setInputMode] = useState('file')
   const [manualInput, setManualInput] = useState('')
 
   const handleCodeSubmit = () => {
@@ -209,7 +209,6 @@ export default function Home() {
         <div style={{background: 'white', padding: 30, borderRadius: 12, boxShadow: '0 2px 10px rgba(0,0,0,0.1)'}}>
           <h2>Βήμα 2: Τηλέφωνα Παραληπτών</h2>
 
-          {/* Toggle επιλογής */}
           <div style={{display: 'flex', gap: 10, margin: '0 0 20px'}}>
             <button
               onClick={() => { setInputMode('file'); setPhones([]); setManualInput('') }}
@@ -279,7 +278,7 @@ export default function Home() {
               disabled={phones.length === 0 || loading}
               style={{flex: 2, padding: 14, background: phones.length > 0 ? '#1a73e8' : '#ccc', color: 'white', border: 'none', borderRadius: 8, fontSize: 16, cursor: phones.length > 0 ? 'pointer' : 'not-allowed'}}
             >
-              {loading ? '⏳ Παρακαλώ περιμένετε...' : `💳 Πληρωμή ${finalAmount.toFixed(2)}€`}
+              {loading ? '⏳ Παρακαλώ περιμένετε...' : phones.length > 0 ? `💳 Πληρωμή ${finalAmount.toFixed(2)}€` : '💳 Πληρωμή'}
             </button>
           </div>
         </div>
