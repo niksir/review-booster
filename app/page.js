@@ -18,6 +18,11 @@ function getSmsCount(charCount) {
   return 4
 }
 
+function extractPhones(text) {
+  const lines = text.split(/[\n,;\t]/).map(l => l.trim().replace(/\s/g, '')).filter(Boolean)
+  return lines.filter(p => p.match(/^(\+30|0030|69|2)\d+/))
+}
+
 export default function Home() {
   const [authed, setAuthed] = useState(false)
   const [codeInput, setCodeInput] = useState('')
@@ -28,6 +33,8 @@ export default function Home() {
   const [phones, setPhones] = useState([])
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
+  const [inputMode, setInputMode] = useState('file') // 'file' or 'manual'
+  const [manualInput, setManualInput] = useState('')
 
   const handleCodeSubmit = () => {
     if (codeInput === process.env.NEXT_PUBLIC_ACCESS_CODE) {
@@ -47,15 +54,16 @@ export default function Home() {
     const file = e.target.files[0]
     const reader = new FileReader()
     reader.onload = (event) => {
-      const text = event.target.result
-      const lines = text.split('\n').filter(line => line.trim())
-      const extractedPhones = lines.map(line => {
-        const parts = line.split(/[,;\t]/)
-        return parts[0].trim().replace(/\s/g, '')
-      }).filter(p => p.match(/^(\+30|0030|69|2)\d+/))
-      setPhones(extractedPhones)
+      const extracted = extractPhones(event.target.result)
+      setPhones(extracted)
     }
     reader.readAsText(file)
+  }
+
+  const handleManualInput = (e) => {
+    setManualInput(e.target.value)
+    const extracted = extractPhones(e.target.value)
+    setPhones(extracted)
   }
 
   const handlePayment = async () => {
@@ -126,8 +134,6 @@ export default function Home() {
 
       {step === 1 && (
         <div style={{display: 'flex', gap: 20, alignItems: 'flex-start'}}>
-
-          {/* Αριστερά: Φόρμα */}
           <div style={{flex: 2, background: 'white', padding: 30, borderRadius: 12, boxShadow: '0 2px 10px rgba(0,0,0,0.1)', minWidth: 0}}>
             <h2 style={{marginTop: 0}}>Βήμα 1: Στοιχεία Επιχείρησης</h2>
 
@@ -161,12 +167,9 @@ export default function Home() {
               {smsPerRecipient > 1 && ` ⚠️ χρέωση x${smsPerRecipient}`}
             </p>
 
-            {/* Preview SMS */}
             <div style={{background: '#f0f4ff', padding: 12, borderRadius: 8, margin: '8px 0 16px', fontSize: 13, overflow: 'hidden'}}>
               <p style={{margin: '0 0 6px', color: '#888', fontSize: 12}}>ΠΡΟΕΠΙΣΚΟΠΗΣΗ SMS</p>
-              <p style={{margin: '0 0 4px', fontWeight: 'bold', color: '#1a73e8', fontSize: 12}}>
-                Από: {businessName || '—'}
-              </p>
+              <p style={{margin: '0 0 4px', fontWeight: 'bold', color: '#1a73e8', fontSize: 12}}>Από: {businessName || '—'}</p>
               <p style={{margin: 0, color: '#333', lineHeight: 1.5, wordBreak: 'break-word'}}>
                 {message}{message && gmbLink ? ' ' : ''}{gmbLink || ''}
               </p>
@@ -181,65 +184,81 @@ export default function Home() {
             </button>
           </div>
 
-          {/* Δεξιά: Τιμολόγιο */}
           <div style={{width: 200, flexShrink: 0, background: 'white', padding: 24, borderRadius: 12, boxShadow: '0 2px 10px rgba(0,0,0,0.1)'}}>
             <h3 style={{marginTop: 0, color: '#333', fontSize: 15}}>💰 Χρέωση SMS</h3>
             <p style={{color: '#666', fontSize: 12, margin: '0 0 16px'}}>Εξαρτάται από το μήκος του μηνύματος</p>
-
             {pricingTiers.map((tier, i) => (
-              <div key={i} style={{
-                padding: '8px 10px',
-                marginBottom: 8,
-                borderRadius: 8,
-                background: tier.active ? '#e8f0fe' : '#f8f9fa',
-                border: tier.active ? '2px solid #1a73e8' : '2px solid transparent',
-              }}>
-                <p style={{margin: '0 0 2px', fontSize: 12, fontWeight: tier.active ? 'bold' : 'normal', color: tier.active ? '#1a73e8' : '#555'}}>
-                  {tier.label}
-                </p>
+              <div key={i} style={{padding: '8px 10px', marginBottom: 8, borderRadius: 8, background: tier.active ? '#e8f0fe' : '#f8f9fa', border: tier.active ? '2px solid #1a73e8' : '2px solid transparent'}}>
+                <p style={{margin: '0 0 2px', fontSize: 12, fontWeight: tier.active ? 'bold' : 'normal', color: tier.active ? '#1a73e8' : '#555'}}>{tier.label}</p>
                 <div style={{display: 'flex', justifyContent: 'space-between'}}>
                   <span style={{fontSize: 11, color: '#999'}}>{tier.sms} SMS/παραλήπτη</span>
                   <span style={{fontWeight: 'bold', color: tier.active ? '#1a73e8' : '#555', fontSize: 13}}>{(tier.sms * 0.09).toFixed(2)}€</span>
                 </div>
               </div>
             ))}
-
             <div style={{marginTop: 16, padding: 12, background: '#f8f9fa', borderRadius: 8, textAlign: 'center'}}>
               <p style={{margin: '0 0 4px', color: '#666', fontSize: 12}}>Τώρα χρεώνεστε</p>
-              <p style={{margin: 0, fontSize: 22, fontWeight: 'bold', color: '#1a73e8'}}>
-                {(smsPerRecipient * 0.09).toFixed(2)}€
-              </p>
+              <p style={{margin: 0, fontSize: 22, fontWeight: 'bold', color: '#1a73e8'}}>{(smsPerRecipient * 0.09).toFixed(2)}€</p>
               <p style={{margin: 0, fontSize: 11, color: '#999'}}>ανά παραλήπτη</p>
             </div>
           </div>
-
         </div>
       )}
 
       {step === 2 && (
         <div style={{background: 'white', padding: 30, borderRadius: 12, boxShadow: '0 2px 10px rgba(0,0,0,0.1)'}}>
-          <h2>Βήμα 2: Ανέβασε τη λίστα τηλεφώνων</h2>
-          <p style={{color: '#666'}}>Ανέβασε CSV αρχείο με τηλέφωνα πελατών (ένα ανά γραμμή)</p>
+          <h2>Βήμα 2: Τηλέφωνα Παραληπτών</h2>
 
-          <input
-            type="file"
-            accept=".csv,.txt"
-            onChange={handleFileUpload}
-            style={{width: '100%', padding: 10, margin: '8px 0 16px', borderRadius: 8, border: '2px dashed #1a73e8', boxSizing: 'border-box'}}
-          />
+          {/* Toggle επιλογής */}
+          <div style={{display: 'flex', gap: 10, margin: '0 0 20px'}}>
+            <button
+              onClick={() => { setInputMode('file'); setPhones([]); setManualInput('') }}
+              style={{flex: 1, padding: 12, borderRadius: 8, border: 'none', background: inputMode === 'file' ? '#1a73e8' : '#f0f0f0', color: inputMode === 'file' ? 'white' : '#555', fontSize: 14, cursor: 'pointer', fontWeight: inputMode === 'file' ? 'bold' : 'normal'}}
+            >
+              📁 Ανέβασμα αρχείου
+            </button>
+            <button
+              onClick={() => { setInputMode('manual'); setPhones([]); }}
+              style={{flex: 1, padding: 12, borderRadius: 8, border: 'none', background: inputMode === 'manual' ? '#1a73e8' : '#f0f0f0', color: inputMode === 'manual' ? 'white' : '#555', fontSize: 14, cursor: 'pointer', fontWeight: inputMode === 'manual' ? 'bold' : 'normal'}}
+            >
+              ✏️ Χειροκίνητη εισαγωγή
+            </button>
+          </div>
+
+          {inputMode === 'file' && (
+            <div>
+              <p style={{color: '#666'}}>Ανέβασε CSV ή TXT αρχείο με τηλέφωνα (ένα ανά γραμμή)</p>
+              <input
+                type="file"
+                accept=".csv,.txt"
+                onChange={handleFileUpload}
+                style={{width: '100%', padding: 10, margin: '8px 0 16px', borderRadius: 8, border: '2px dashed #1a73e8', boxSizing: 'border-box'}}
+              />
+            </div>
+          )}
+
+          {inputMode === 'manual' && (
+            <div>
+              <p style={{color: '#666'}}>Γράψε ή κάνε επικόλληση τους αριθμούς — έναν ανά γραμμή</p>
+              <textarea
+                style={{width: '100%', padding: 10, margin: '8px 0 16px', borderRadius: 8, border: '1px solid #ddd', boxSizing: 'border-box', height: 200, resize: 'none', fontFamily: 'monospace', fontSize: 14}}
+                placeholder={'6912345678\n6923456789\n6934567890'}
+                value={manualInput}
+                onChange={handleManualInput}
+              />
+            </div>
+          )}
 
           {phones.length > 0 && (
             <div>
-              <div style={{background: '#e8f5e9', padding: 16, borderRadius: 8, margin: '16px 0'}}>
-                ✅ Βρέθηκαν <strong>{phones.length}</strong> τηλέφωνα
+              <div style={{background: '#e8f5e9', padding: 16, borderRadius: 8, margin: '0 0 16px'}}>
+                ✅ Βρέθηκαν <strong>{phones.length}</strong> έγκυρα τηλέφωνα
                 {smsPerRecipient > 1 && <span style={{color: '#856404'}}> — {smsPerRecipient} SMS ανά παραλήπτη</span>}
               </div>
 
-              <div style={{background: '#f8f9fa', padding: 20, borderRadius: 8, margin: '16px 0', textAlign: 'center'}}>
+              <div style={{background: '#f8f9fa', padding: 20, borderRadius: 8, margin: '0 0 16px', textAlign: 'center'}}>
                 <p style={{fontSize: 16, color: '#666', margin: '0 0 8px'}}>Σύνολο χρέωσης</p>
-                <p style={{fontSize: 36, fontWeight: 'bold', color: '#1a73e8', margin: '0 0 4px'}}>
-                  {finalAmount.toFixed(2)}€
-                </p>
+                <p style={{fontSize: 36, fontWeight: 'bold', color: '#1a73e8', margin: '0 0 4px'}}>{finalAmount.toFixed(2)}€</p>
                 {isMinimum
                   ? <p style={{color: '#999', margin: 0}}>Ελάχιστη χρέωση</p>
                   : <p style={{color: '#999', margin: 0}}>{phones.length} x {smsPerRecipient} SMS x 0.09€</p>
