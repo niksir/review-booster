@@ -1,6 +1,24 @@
 'use client'
 import { useState } from 'react'
 
+// Χαρακτήρες που μετράνε για 2
+const DOUBLE_CHARS = ['€', '[', ']', '{', '}', '~', '^', '|', '\\']
+
+function countSmsChars(text) {
+  let count = 0
+  for (const char of text) {
+    count += DOUBLE_CHARS.includes(char) ? 2 : 1
+  }
+  return count
+}
+
+function getSmsCount(charCount) {
+  if (charCount <= 160) return 1
+  if (charCount <= 306) return 2
+  if (charCount <= 459) return 3
+  return 4
+}
+
 export default function Home() {
   const [authed, setAuthed] = useState(false)
   const [codeInput, setCodeInput] = useState('')
@@ -22,13 +40,8 @@ export default function Home() {
   }
 
   const handleBusinessNameChange = (e) => {
-    // Μόνο λατινικοί χαρακτήρες και αριθμοί, μέχρι 11
     const val = e.target.value.replace(/[^a-zA-Z0-9 ]/g, '').slice(0, 11)
     setBusinessName(val)
-  }
-
-  const handleMessageChange = (e) => {
-    setMessage(e.target.value)
   }
 
   const handleFileUpload = (e) => {
@@ -52,7 +65,7 @@ export default function Home() {
       const res = await fetch('/api/create-payment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phones, gmbLink, businessName, message })
+        body: JSON.stringify({ phones, gmbLink, businessName, message, smsPerRecipient })
       })
       const data = await res.json()
       if (data.url) {
@@ -67,15 +80,17 @@ export default function Home() {
     }
   }
 
-  const calculated = phones.length * 0.09
+  // Υπολογισμός χαρακτήρων
+  const fullText = message + (gmbLink ? ' ' + gmbLink : '')
+  const totalChars = countSmsChars(fullText)
+  const smsPerRecipient = getSmsCount(totalChars)
+  const charsColor = totalChars > 459 ? 'red' : totalChars > 306 ? 'orange' : totalChars > 160 ? '#e6a817' : '#999'
+
+  // Υπολογισμός κόστους με βάση SMS ανά παραλήπτη
+  const pricePerSms = 0.09
+  const calculated = phones.length * smsPerRecipient * pricePerSms
   const finalAmount = calculated < 0.50 ? 0.50 : calculated
   const isMinimum = calculated < 0.50 && phones.length > 0
-
-  // Μέτρηση χαρακτήρων: μήνυμα + κενό + link
-  const totalChars = message.length + (gmbLink ? gmbLink.length + 1 : 0)
-  const charsLeft = 150 - totalChars
-  const charsColor = charsLeft < 0 ? 'red' : charsLeft < 20 ? 'orange' : '#999'
-  const isOverLimit = totalChars > 150
 
   if (!authed) {
     return (
@@ -131,15 +146,23 @@ export default function Home() {
 
           <label>Μήνυμα SMS <span style={{color: '#999', fontSize: 13}}>(το link προστίθεται αυτόματα στο τέλος)</span></label>
           <textarea
-            style={{width: '100%', padding: 10, margin: '8px 0 4px', borderRadius: 8, border: isOverLimit ? '2px solid red' : '1px solid #ddd', boxSizing: 'border-box', height: 80}}
+            style={{width: '100%', padding: 10, margin: '8px 0 4px', borderRadius: 8, border: totalChars > 160 ? '2px solid orange' : '1px solid #ddd', boxSizing: 'border-box', height: 80}}
             placeholder="Σας ευχαριστούμε! Θα μας βοηθούσατε με μια κριτική:"
             value={message}
-            onChange={handleMessageChange}
+            onChange={e => setMessage(e.target.value)}
           />
+
           <p style={{color: charsColor, fontSize: 13, margin: '0 0 4px'}}>
-            {totalChars}/150 χαρακτήρες συνολικά (μήνυμα + link)
-            {isOverLimit && ' — Υπερβαίνετε το όριο!'}
+            {totalChars} χαρακτήρες — <strong>{smsPerRecipient} SMS</strong> ανά παραλήπτη
+            {smsPerRecipient > 1 && ` (χρέωση x${smsPerRecipient})`}
           </p>
+
+          {smsPerRecipient > 1 && (
+            <div style={{background: '#fff3cd', padding: 10, borderRadius: 8, margin: '4px 0 8px', fontSize: 13, color: '#856404'}}>
+              ⚠️ Το μήνυμα υπερβαίνει τους 160 χαρακτήρες — κάθε αποστολή χρεώνεται ως <strong>{smsPerRecipient} SMS</strong>!
+            </div>
+          )}
+
           <div style={{background: '#f8f9fa', padding: 10, borderRadius: 8, margin: '8px 0 16px', fontSize: 13, color: '#555'}}>
             <strong>Προεπισκόπηση SMS:</strong><br/>
             {message}{message && gmbLink ? ' ' : ''}{gmbLink}
@@ -147,8 +170,8 @@ export default function Home() {
 
           <button
             onClick={() => setStep(2)}
-            disabled={!businessName || !gmbLink || !message || isOverLimit}
-            style={{width: '100%', padding: 14, background: businessName && gmbLink && message && !isOverLimit ? '#1a73e8' : '#ccc', color: 'white', border: 'none', borderRadius: 8, fontSize: 16, cursor: businessName && gmbLink && message && !isOverLimit ? 'pointer' : 'not-allowed'}}
+            disabled={!businessName || !gmbLink || !message}
+            style={{width: '100%', padding: 14, background: businessName && gmbLink && message ? '#1a73e8' : '#ccc', color: 'white', border: 'none', borderRadius: 8, fontSize: 16, cursor: businessName && gmbLink && message ? 'pointer' : 'not-allowed'}}
           >
             Επόμενο →
           </button>
@@ -171,6 +194,7 @@ export default function Home() {
             <div>
               <div style={{background: '#e8f5e9', padding: 16, borderRadius: 8, margin: '16px 0'}}>
                 ✅ Βρέθηκαν <strong>{phones.length}</strong> τηλέφωνα
+                {smsPerRecipient > 1 && <span style={{color: '#856404'}}> — {smsPerRecipient} SMS ανά παραλήπτη</span>}
               </div>
 
               <div style={{background: '#f8f9fa', padding: 20, borderRadius: 8, margin: '16px 0', textAlign: 'center'}}>
@@ -180,7 +204,7 @@ export default function Home() {
                 </p>
                 {isMinimum
                   ? <p style={{color: '#999', margin: 0}}>Ελάχιστη χρέωση</p>
-                  : <p style={{color: '#999', margin: 0}}>{phones.length} SMS x 0.09€</p>
+                  : <p style={{color: '#999', margin: 0}}>{phones.length} x {smsPerRecipient} SMS x 0.09€</p>
                 }
               </div>
             </div>
