@@ -24,8 +24,9 @@ function extractPhones(text) {
 }
 
 export default function Home() {
-  const [authed, setAuthed] = useState(false)
-  const [codeInput, setCodeInput] = useState('')
+const ACCESS_CODE = process.env.NEXT_PUBLIC_ACCESS_CODE
+const noAuth = ACCESS_CODE === 'zero'
+const [authed, setAuthed] = useState(noAuth)  const [codeInput, setCodeInput] = useState('')
   const [codeError, setCodeError] = useState(false)
   const [step, setStep] = useState(1)
   const [gmbLink, setGmbLink] = useState('')
