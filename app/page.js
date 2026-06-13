@@ -21,6 +21,16 @@ export default function Home() {
     }
   }
 
+  const handleBusinessNameChange = (e) => {
+    // Μόνο λατινικοί χαρακτήρες και αριθμοί, μέχρι 11
+    const val = e.target.value.replace(/[^a-zA-Z0-9 ]/g, '').slice(0, 11)
+    setBusinessName(val)
+  }
+
+  const handleMessageChange = (e) => {
+    setMessage(e.target.value)
+  }
+
   const handleFileUpload = (e) => {
     const file = e.target.files[0]
     const reader = new FileReader()
@@ -61,6 +71,12 @@ export default function Home() {
   const finalAmount = calculated < 0.50 ? 0.50 : calculated
   const isMinimum = calculated < 0.50 && phones.length > 0
 
+  // Μέτρηση χαρακτήρων: μήνυμα + κενό + link
+  const totalChars = message.length + (gmbLink ? gmbLink.length + 1 : 0)
+  const charsLeft = 150 - totalChars
+  const charsColor = charsLeft < 0 ? 'red' : charsLeft < 20 ? 'orange' : '#999'
+  const isOverLimit = totalChars > 150
+
   if (!authed) {
     return (
       <div style={{maxWidth: 400, margin: '100px auto', padding: 20}}>
@@ -95,13 +111,15 @@ export default function Home() {
         <div style={{background: 'white', padding: 30, borderRadius: 12, boxShadow: '0 2px 10px rgba(0,0,0,0.1)'}}>
           <h2>Βήμα 1: Στοιχεία Επιχείρησης</h2>
 
-          <label>Όνομα Επιχείρησης</label>
+          <label>Όνομα Αποστολέα <span style={{color: '#999', fontSize: 13}}>(μόνο αγγλικοί χαρακτήρες, έως 11)</span></label>
           <input
-            style={{width: '100%', padding: 10, margin: '8px 0 16px', borderRadius: 8, border: '1px solid #ddd', boxSizing: 'border-box'}}
-            placeholder="π.χ. Ταβέρνα Ο Νίκος"
+            style={{width: '100%', padding: 10, margin: '8px 0 4px', borderRadius: 8, border: '1px solid #ddd', boxSizing: 'border-box'}}
+            placeholder="π.χ. MyBusiness"
             value={businessName}
-            onChange={e => setBusinessName(e.target.value)}
+            onChange={handleBusinessNameChange}
+            maxLength={11}
           />
+          <p style={{color: '#999', fontSize: 13, margin: '0 0 16px'}}>{businessName.length}/11 χαρακτήρες</p>
 
           <label>Google My Business Link</label>
           <input
@@ -111,18 +129,26 @@ export default function Home() {
             onChange={e => setGmbLink(e.target.value)}
           />
 
-          <label>Μήνυμα SMS</label>
+          <label>Μήνυμα SMS <span style={{color: '#999', fontSize: 13}}>(το link προστίθεται αυτόματα στο τέλος)</span></label>
           <textarea
-            style={{width: '100%', padding: 10, margin: '8px 0 16px', borderRadius: 8, border: '1px solid #ddd', boxSizing: 'border-box', height: 80}}
+            style={{width: '100%', padding: 10, margin: '8px 0 4px', borderRadius: 8, border: isOverLimit ? '2px solid red' : '1px solid #ddd', boxSizing: 'border-box', height: 80}}
             placeholder="Σας ευχαριστούμε! Θα μας βοηθούσατε με μια κριτική:"
             value={message}
-            onChange={e => setMessage(e.target.value)}
+            onChange={handleMessageChange}
           />
+          <p style={{color: charsColor, fontSize: 13, margin: '0 0 4px'}}>
+            {totalChars}/150 χαρακτήρες συνολικά (μήνυμα + link)
+            {isOverLimit && ' — Υπερβαίνετε το όριο!'}
+          </p>
+          <div style={{background: '#f8f9fa', padding: 10, borderRadius: 8, margin: '8px 0 16px', fontSize: 13, color: '#555'}}>
+            <strong>Προεπισκόπηση SMS:</strong><br/>
+            {message}{message && gmbLink ? ' ' : ''}{gmbLink}
+          </div>
 
           <button
             onClick={() => setStep(2)}
-            disabled={!businessName || !gmbLink}
-            style={{width: '100%', padding: 14, background: businessName && gmbLink ? '#1a73e8' : '#ccc', color: 'white', border: 'none', borderRadius: 8, fontSize: 16, cursor: businessName && gmbLink ? 'pointer' : 'not-allowed'}}
+            disabled={!businessName || !gmbLink || !message || isOverLimit}
+            style={{width: '100%', padding: 14, background: businessName && gmbLink && message && !isOverLimit ? '#1a73e8' : '#ccc', color: 'white', border: 'none', borderRadius: 8, fontSize: 16, cursor: businessName && gmbLink && message && !isOverLimit ? 'pointer' : 'not-allowed'}}
           >
             Επόμενο →
           </button>
