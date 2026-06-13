@@ -128,7 +128,7 @@ export default function Home() {
         <div style={{display: 'flex', gap: 20, alignItems: 'flex-start'}}>
 
           {/* Αριστερά: Φόρμα */}
-          <div style={{flex: 2, background: 'white', padding: 30, borderRadius: 12, boxShadow: '0 2px 10px rgba(0,0,0,0.1)'}}>
+          <div style={{flex: 2, background: 'white', padding: 30, borderRadius: 12, boxShadow: '0 2px 10px rgba(0,0,0,0.1)', minWidth: 0}}>
             <h2 style={{marginTop: 0}}>Βήμα 1: Στοιχεία Επιχείρησης</h2>
 
             <label>Όνομα Αποστολέα <span style={{color: '#999', fontSize: 13}}>(μόνο αγγλικοί, έως 11)</span></label>
@@ -151,7 +151,7 @@ export default function Home() {
 
             <label>Μήνυμα SMS <span style={{color: '#999', fontSize: 13}}>(το link προστίθεται αυτόματα στο τέλος)</span></label>
             <textarea
-              style={{width: '100%', padding: 10, margin: '8px 0 4px', borderRadius: 8, border: smsPerRecipient > 1 ? '2px solid orange' : '1px solid #ddd', boxSizing: 'border-box', height: 80}}
+              style={{width: '100%', padding: 10, margin: '8px 0 4px', borderRadius: 8, border: smsPerRecipient > 1 ? '2px solid orange' : '1px solid #ddd', boxSizing: 'border-box', height: 100, resize: 'none', overflow: 'auto'}}
               placeholder="Σας ευχαριστούμε! Θα μας βοηθούσατε με μια κριτική:"
               value={message}
               onChange={e => setMessage(e.target.value)}
@@ -162,12 +162,12 @@ export default function Home() {
             </p>
 
             {/* Preview SMS */}
-            <div style={{background: '#f0f4ff', padding: 12, borderRadius: 8, margin: '8px 0 16px', fontSize: 13}}>
+            <div style={{background: '#f0f4ff', padding: 12, borderRadius: 8, margin: '8px 0 16px', fontSize: 13, overflow: 'hidden'}}>
               <p style={{margin: '0 0 6px', color: '#888', fontSize: 12}}>ΠΡΟΕΠΙΣΚΟΠΗΣΗ SMS</p>
               <p style={{margin: '0 0 4px', fontWeight: 'bold', color: '#1a73e8', fontSize: 12}}>
                 Από: {businessName || '—'}
               </p>
-              <p style={{margin: 0, color: '#333', lineHeight: 1.5}}>
+              <p style={{margin: 0, color: '#333', lineHeight: 1.5, wordBreak: 'break-word'}}>
                 {message}{message && gmbLink ? ' ' : ''}{gmbLink || ''}
               </p>
             </div>
@@ -182,42 +182,34 @@ export default function Home() {
           </div>
 
           {/* Δεξιά: Τιμολόγιο */}
-          <div style={{flex: 1, background: 'white', padding: 24, borderRadius: 12, boxShadow: '0 2px 10px rgba(0,0,0,0.1)'}}>
-            <h3 style={{marginTop: 0, color: '#333'}}>💰 Χρέωση SMS</h3>
-            <p style={{color: '#666', fontSize: 13, margin: '0 0 16px'}}>Η χρέωση εξαρτάται από το μήκος του μηνύματος</p>
+          <div style={{width: 200, flexShrink: 0, background: 'white', padding: 24, borderRadius: 12, boxShadow: '0 2px 10px rgba(0,0,0,0.1)'}}>
+            <h3 style={{marginTop: 0, color: '#333', fontSize: 15}}>💰 Χρέωση SMS</h3>
+            <p style={{color: '#666', fontSize: 12, margin: '0 0 16px'}}>Εξαρτάται από το μήκος του μηνύματος</p>
 
             {pricingTiers.map((tier, i) => (
               <div key={i} style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '10px 12px',
+                padding: '8px 10px',
                 marginBottom: 8,
                 borderRadius: 8,
                 background: tier.active ? '#e8f0fe' : '#f8f9fa',
                 border: tier.active ? '2px solid #1a73e8' : '2px solid transparent',
               }}>
-                <div>
-                  <p style={{margin: 0, fontSize: 13, fontWeight: tier.active ? 'bold' : 'normal', color: tier.active ? '#1a73e8' : '#555'}}>
-                    {tier.label}
-                  </p>
-                  <p style={{margin: 0, fontSize: 12, color: '#999'}}>{tier.sms} SMS ανά παραλήπτη</p>
-                </div>
-                <div style={{textAlign: 'right'}}>
-                  <p style={{margin: 0, fontWeight: 'bold', color: tier.active ? '#1a73e8' : '#555'}}>
-                    {(tier.sms * 0.09).toFixed(2)}€
-                  </p>
-                  <p style={{margin: 0, fontSize: 11, color: '#999'}}>ανά αριθμό</p>
+                <p style={{margin: '0 0 2px', fontSize: 12, fontWeight: tier.active ? 'bold' : 'normal', color: tier.active ? '#1a73e8' : '#555'}}>
+                  {tier.label}
+                </p>
+                <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                  <span style={{fontSize: 11, color: '#999'}}>{tier.sms} SMS/παραλήπτη</span>
+                  <span style={{fontWeight: 'bold', color: tier.active ? '#1a73e8' : '#555', fontSize: 13}}>{(tier.sms * 0.09).toFixed(2)}€</span>
                 </div>
               </div>
             ))}
 
             <div style={{marginTop: 16, padding: 12, background: '#f8f9fa', borderRadius: 8, textAlign: 'center'}}>
-              <p style={{margin: '0 0 4px', color: '#666', fontSize: 13}}>Τώρα χρεώνεστε</p>
-              <p style={{margin: 0, fontSize: 24, fontWeight: 'bold', color: '#1a73e8'}}>
+              <p style={{margin: '0 0 4px', color: '#666', fontSize: 12}}>Τώρα χρεώνεστε</p>
+              <p style={{margin: 0, fontSize: 22, fontWeight: 'bold', color: '#1a73e8'}}>
                 {(smsPerRecipient * 0.09).toFixed(2)}€
               </p>
-              <p style={{margin: 0, fontSize: 12, color: '#999'}}>ανά παραλήπτη</p>
+              <p style={{margin: 0, fontSize: 11, color: '#999'}}>ανά παραλήπτη</p>
             </div>
           </div>
 
