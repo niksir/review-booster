@@ -1,7 +1,6 @@
 'use client'
 import { useState } from 'react'
 
-// Χαρακτήρες που μετράνε για 2
 const DOUBLE_CHARS = ['€', '[', ']', '{', '}', '~', '^', '|', '\\']
 
 function countSmsChars(text) {
@@ -80,17 +79,20 @@ export default function Home() {
     }
   }
 
-  // Υπολογισμός χαρακτήρων
   const fullText = message + (gmbLink ? ' ' + gmbLink : '')
   const totalChars = countSmsChars(fullText)
   const smsPerRecipient = getSmsCount(totalChars)
-  const charsColor = totalChars > 459 ? 'red' : totalChars > 306 ? 'orange' : totalChars > 160 ? '#e6a817' : '#999'
 
-  // Υπολογισμός κόστους με βάση SMS ανά παραλήπτη
-  const pricePerSms = 0.09
-  const calculated = phones.length * smsPerRecipient * pricePerSms
+  const calculated = phones.length * smsPerRecipient * 0.09
   const finalAmount = calculated < 0.50 ? 0.50 : calculated
   const isMinimum = calculated < 0.50 && phones.length > 0
+
+  const pricingTiers = [
+    { label: '1–160 χαρ.', sms: 1, active: totalChars <= 160 },
+    { label: '161–306 χαρ.', sms: 2, active: totalChars > 160 && totalChars <= 306 },
+    { label: '307–459 χαρ.', sms: 3, active: totalChars > 306 && totalChars <= 459 },
+    { label: '460–612 χαρ.', sms: 4, active: totalChars > 459 },
+  ]
 
   if (!authed) {
     return (
@@ -119,62 +121,106 @@ export default function Home() {
   }
 
   return (
-    <div style={{maxWidth: 600, margin: '40px auto', padding: 20}}>
+    <div style={{maxWidth: 900, margin: '40px auto', padding: 20}}>
       <h1 style={{color: '#1a73e8', textAlign: 'center'}}>⭐ Review Booster</h1>
 
       {step === 1 && (
-        <div style={{background: 'white', padding: 30, borderRadius: 12, boxShadow: '0 2px 10px rgba(0,0,0,0.1)'}}>
-          <h2>Βήμα 1: Στοιχεία Επιχείρησης</h2>
+        <div style={{display: 'flex', gap: 20, alignItems: 'flex-start'}}>
 
-          <label>Όνομα Αποστολέα <span style={{color: '#999', fontSize: 13}}>(μόνο αγγλικοί χαρακτήρες, έως 11)</span></label>
-          <input
-            style={{width: '100%', padding: 10, margin: '8px 0 4px', borderRadius: 8, border: '1px solid #ddd', boxSizing: 'border-box'}}
-            placeholder="π.χ. MyBusiness"
-            value={businessName}
-            onChange={handleBusinessNameChange}
-            maxLength={11}
-          />
-          <p style={{color: '#999', fontSize: 13, margin: '0 0 16px'}}>{businessName.length}/11 χαρακτήρες</p>
+          {/* Αριστερά: Φόρμα */}
+          <div style={{flex: 2, background: 'white', padding: 30, borderRadius: 12, boxShadow: '0 2px 10px rgba(0,0,0,0.1)'}}>
+            <h2 style={{marginTop: 0}}>Βήμα 1: Στοιχεία Επιχείρησης</h2>
 
-          <label>Google My Business Link</label>
-          <input
-            style={{width: '100%', padding: 10, margin: '8px 0 16px', borderRadius: 8, border: '1px solid #ddd', boxSizing: 'border-box'}}
-            placeholder="https://g.page/r/..."
-            value={gmbLink}
-            onChange={e => setGmbLink(e.target.value)}
-          />
+            <label>Όνομα Αποστολέα <span style={{color: '#999', fontSize: 13}}>(μόνο αγγλικοί, έως 11)</span></label>
+            <input
+              style={{width: '100%', padding: 10, margin: '8px 0 4px', borderRadius: 8, border: '1px solid #ddd', boxSizing: 'border-box'}}
+              placeholder="π.χ. MyBusiness"
+              value={businessName}
+              onChange={handleBusinessNameChange}
+              maxLength={11}
+            />
+            <p style={{color: '#999', fontSize: 13, margin: '0 0 16px'}}>{businessName.length}/11 χαρακτήρες</p>
 
-          <label>Μήνυμα SMS <span style={{color: '#999', fontSize: 13}}>(το link προστίθεται αυτόματα στο τέλος)</span></label>
-          <textarea
-            style={{width: '100%', padding: 10, margin: '8px 0 4px', borderRadius: 8, border: totalChars > 160 ? '2px solid orange' : '1px solid #ddd', boxSizing: 'border-box', height: 80}}
-            placeholder="Σας ευχαριστούμε! Θα μας βοηθούσατε με μια κριτική:"
-            value={message}
-            onChange={e => setMessage(e.target.value)}
-          />
+            <label>Google My Business Link</label>
+            <input
+              style={{width: '100%', padding: 10, margin: '8px 0 16px', borderRadius: 8, border: '1px solid #ddd', boxSizing: 'border-box'}}
+              placeholder="https://g.page/r/..."
+              value={gmbLink}
+              onChange={e => setGmbLink(e.target.value)}
+            />
 
-          <p style={{color: charsColor, fontSize: 13, margin: '0 0 4px'}}>
-            {totalChars} χαρακτήρες — <strong>{smsPerRecipient} SMS</strong> ανά παραλήπτη
-            {smsPerRecipient > 1 && ` (χρέωση x${smsPerRecipient})`}
-          </p>
+            <label>Μήνυμα SMS <span style={{color: '#999', fontSize: 13}}>(το link προστίθεται αυτόματα στο τέλος)</span></label>
+            <textarea
+              style={{width: '100%', padding: 10, margin: '8px 0 4px', borderRadius: 8, border: smsPerRecipient > 1 ? '2px solid orange' : '1px solid #ddd', boxSizing: 'border-box', height: 80}}
+              placeholder="Σας ευχαριστούμε! Θα μας βοηθούσατε με μια κριτική:"
+              value={message}
+              onChange={e => setMessage(e.target.value)}
+            />
+            <p style={{color: smsPerRecipient > 1 ? 'orange' : '#999', fontSize: 13, margin: '0 0 8px'}}>
+              {totalChars} χαρακτήρες — <strong>{smsPerRecipient} SMS</strong> ανά παραλήπτη
+              {smsPerRecipient > 1 && ` ⚠️ χρέωση x${smsPerRecipient}`}
+            </p>
 
-          {smsPerRecipient > 1 && (
-            <div style={{background: '#fff3cd', padding: 10, borderRadius: 8, margin: '4px 0 8px', fontSize: 13, color: '#856404'}}>
-              ⚠️ Το μήνυμα υπερβαίνει τους 160 χαρακτήρες — κάθε αποστολή χρεώνεται ως <strong>{smsPerRecipient} SMS</strong>!
+            {/* Preview SMS */}
+            <div style={{background: '#f0f4ff', padding: 12, borderRadius: 8, margin: '8px 0 16px', fontSize: 13}}>
+              <p style={{margin: '0 0 6px', color: '#888', fontSize: 12}}>ΠΡΟΕΠΙΣΚΟΠΗΣΗ SMS</p>
+              <p style={{margin: '0 0 4px', fontWeight: 'bold', color: '#1a73e8', fontSize: 12}}>
+                Από: {businessName || '—'}
+              </p>
+              <p style={{margin: 0, color: '#333', lineHeight: 1.5}}>
+                {message}{message && gmbLink ? ' ' : ''}{gmbLink || ''}
+              </p>
             </div>
-          )}
 
-          <div style={{background: '#f8f9fa', padding: 10, borderRadius: 8, margin: '8px 0 16px', fontSize: 13, color: '#555'}}>
-            <strong>Προεπισκόπηση SMS:</strong><br/>
-            {message}{message && gmbLink ? ' ' : ''}{gmbLink}
+            <button
+              onClick={() => setStep(2)}
+              disabled={!businessName || !gmbLink || !message}
+              style={{width: '100%', padding: 14, background: businessName && gmbLink && message ? '#1a73e8' : '#ccc', color: 'white', border: 'none', borderRadius: 8, fontSize: 16, cursor: businessName && gmbLink && message ? 'pointer' : 'not-allowed'}}
+            >
+              Επόμενο →
+            </button>
           </div>
 
-          <button
-            onClick={() => setStep(2)}
-            disabled={!businessName || !gmbLink || !message}
-            style={{width: '100%', padding: 14, background: businessName && gmbLink && message ? '#1a73e8' : '#ccc', color: 'white', border: 'none', borderRadius: 8, fontSize: 16, cursor: businessName && gmbLink && message ? 'pointer' : 'not-allowed'}}
-          >
-            Επόμενο →
-          </button>
+          {/* Δεξιά: Τιμολόγιο */}
+          <div style={{flex: 1, background: 'white', padding: 24, borderRadius: 12, boxShadow: '0 2px 10px rgba(0,0,0,0.1)'}}>
+            <h3 style={{marginTop: 0, color: '#333'}}>💰 Χρέωση SMS</h3>
+            <p style={{color: '#666', fontSize: 13, margin: '0 0 16px'}}>Η χρέωση εξαρτάται από το μήκος του μηνύματος</p>
+
+            {pricingTiers.map((tier, i) => (
+              <div key={i} style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '10px 12px',
+                marginBottom: 8,
+                borderRadius: 8,
+                background: tier.active ? '#e8f0fe' : '#f8f9fa',
+                border: tier.active ? '2px solid #1a73e8' : '2px solid transparent',
+              }}>
+                <div>
+                  <p style={{margin: 0, fontSize: 13, fontWeight: tier.active ? 'bold' : 'normal', color: tier.active ? '#1a73e8' : '#555'}}>
+                    {tier.label}
+                  </p>
+                  <p style={{margin: 0, fontSize: 12, color: '#999'}}>{tier.sms} SMS ανά παραλήπτη</p>
+                </div>
+                <div style={{textAlign: 'right'}}>
+                  <p style={{margin: 0, fontWeight: 'bold', color: tier.active ? '#1a73e8' : '#555'}}>
+                    {(tier.sms * 0.09).toFixed(2)}€
+                  </p>
+                  <p style={{margin: 0, fontSize: 11, color: '#999'}}>ανά αριθμό</p>
+                </div>
+              </div>
+            ))}
+
+            <div style={{marginTop: 16, padding: 12, background: '#f8f9fa', borderRadius: 8, textAlign: 'center'}}>
+              <p style={{margin: '0 0 4px', color: '#666', fontSize: 13}}>Τώρα χρεώνεστε</p>
+              <p style={{margin: 0, fontSize: 24, fontWeight: 'bold', color: '#1a73e8'}}>
+                {(smsPerRecipient * 0.09).toFixed(2)}€
+              </p>
+              <p style={{margin: 0, fontSize: 12, color: '#999'}}>ανά παραλήπτη</p>
+            </div>
+          </div>
+
         </div>
       )}
 
