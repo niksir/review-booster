@@ -4,7 +4,8 @@ export async function POST(request) {
 
     const quantity = phones.length
     const calculatedAmount = Math.round(quantity * 0.09 * 100)
-    const amount = Math.max(calculatedAmount, 50) // ελάχιστο 0.50€
+    const amount = Math.max(calculatedAmount, 50)
+    const isMinimum = calculatedAmount < 50
 
     const stripeKey = process.env.STRIPE_SECRET_KEY
 
@@ -18,7 +19,7 @@ export async function POST(request) {
         'payment_method_types[0]': 'card',
         'line_items[0][price_data][currency]': 'eur',
         'line_items[0][price_data][product_data][name]': 'Review Booster',
-        'line_items[0][price_data][product_data][description]': `${quantity} SMS x 0.09€`,
+        'line_items[0][price_data][product_data][description]': isMinimum ? 'Ελάχιστη χρέωση' : `${quantity} SMS x 0.09€`,
         'line_items[0][price_data][unit_amount]': amount.toString(),
         'line_items[0][quantity]': '1',
         'mode': 'payment',
