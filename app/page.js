@@ -23,10 +23,12 @@ function extractPhones(text) {
   return lines.filter(p => p.match(/^(\+30|0030|69|2)\d+/))
 }
 
-export default function Home() {
 const ACCESS_CODE = process.env.NEXT_PUBLIC_ACCESS_CODE
-const noAuth = ACCESS_CODE === 'zero'
-const [authed, setAuthed] = useState(noAuth)  const [codeInput, setCodeInput] = useState('')
+const NO_AUTH = ACCESS_CODE === 'zero'
+
+export default function Home() {
+  const [authed, setAuthed] = useState(NO_AUTH)
+  const [codeInput, setCodeInput] = useState('')
   const [codeError, setCodeError] = useState(false)
   const [step, setStep] = useState(1)
   const [gmbLink, setGmbLink] = useState('')
@@ -38,7 +40,7 @@ const [authed, setAuthed] = useState(noAuth)  const [codeInput, setCodeInput] = 
   const [manualInput, setManualInput] = useState('')
 
   const handleCodeSubmit = () => {
-    if (codeInput === process.env.NEXT_PUBLIC_ACCESS_CODE) {
+    if (codeInput === ACCESS_CODE) {
       setAuthed(true)
       setCodeError(false)
     } else {
