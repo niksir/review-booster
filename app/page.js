@@ -136,8 +136,8 @@ export default function Home() {
       <h1 style={{color: '#1a73e8', textAlign: 'center'}}>⭐ Review Booster</h1>
 
       {step === 1 && (
-        <div style={{display: 'flex', gap: 20, alignItems: 'flex-start'}}>
-          <div style={{flex: 2, background: 'white', padding: 30, borderRadius: 12, boxShadow: '0 2px 10px rgba(0,0,0,0.1)', minWidth: 0}}>
+        <div style={{display: 'flex', gap: 20, alignItems: 'flex-start', flexWrap: 'wrap'}}>
+          <div style={{flex: '2 1 300px', background: 'white', padding: 30, borderRadius: 12, boxShadow: '0 2px 10px rgba(0,0,0,0.1)', minWidth: 0}}>
             <h2 style={{marginTop: 0}}>Βήμα 1: Στοιχεία Επιχείρησης</h2>
 
             <label>Όνομα Αποστολέα <span style={{color: '#999', fontSize: 13}}>(μόνο αγγλικοί, έως 11)</span></label>
@@ -187,7 +187,7 @@ export default function Home() {
             </button>
           </div>
 
-          <div style={{width: 200, flexShrink: 0, background: 'white', padding: 24, borderRadius: 12, boxShadow: '0 2px 10px rgba(0,0,0,0.1)'}}>
+          <div style={{width: 200, flex: '1 1 200px', background: 'white', padding: 24, borderRadius: 12, boxShadow: '0 2px 10px rgba(0,0,0,0.1)'}}>
             <h3 style={{marginTop: 0, color: '#333', fontSize: 15}}>💰 Χρέωση SMS</h3>
             <p style={{color: '#666', fontSize: 12, margin: '0 0 16px'}}>Εξαρτάται από το μήκος του μηνύματος</p>
             {pricingTiers.map((tier, i) => (
@@ -212,16 +212,16 @@ export default function Home() {
         <div style={{background: 'white', padding: 30, borderRadius: 12, boxShadow: '0 2px 10px rgba(0,0,0,0.1)'}}>
           <h2>Βήμα 2: Τηλέφωνα Παραληπτών</h2>
 
-          <div style={{display: 'flex', gap: 10, margin: '0 0 20px'}}>
+          <div style={{display: 'flex', gap: 10, margin: '0 0 20px', flexWrap: 'wrap'}}>
             <button
               onClick={() => { setInputMode('file'); setPhones([]); setManualInput('') }}
-              style={{flex: 1, padding: 12, borderRadius: 8, border: 'none', background: inputMode === 'file' ? '#1a73e8' : '#f0f0f0', color: inputMode === 'file' ? 'white' : '#555', fontSize: 14, cursor: 'pointer', fontWeight: inputMode === 'file' ? 'bold' : 'normal'}}
+              style={{flex: '1 1 140px', padding: 12, borderRadius: 8, border: 'none', background: inputMode === 'file' ? '#1a73e8' : '#f0f0f0', color: inputMode === 'file' ? 'white' : '#555', fontSize: 14, cursor: 'pointer', fontWeight: inputMode === 'file' ? 'bold' : 'normal'}}
             >
               📁 Ανέβασμα αρχείου
             </button>
             <button
               onClick={() => { setInputMode('manual'); setPhones([]); }}
-              style={{flex: 1, padding: 12, borderRadius: 8, border: 'none', background: inputMode === 'manual' ? '#1a73e8' : '#f0f0f0', color: inputMode === 'manual' ? 'white' : '#555', fontSize: 14, cursor: 'pointer', fontWeight: inputMode === 'manual' ? 'bold' : 'normal'}}
+              style={{flex: '1 1 140px', padding: 12, borderRadius: 8, border: 'none', background: inputMode === 'manual' ? '#1a73e8' : '#f0f0f0', color: inputMode === 'manual' ? 'white' : '#555', fontSize: 14, cursor: 'pointer', fontWeight: inputMode === 'manual' ? 'bold' : 'normal'}}
             >
               ✏️ Χειροκίνητη εισαγωγή
             </button>
