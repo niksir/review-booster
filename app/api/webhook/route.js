@@ -2,6 +2,11 @@ import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
+function toGreekUpperGsm(text) {
+  // Μετατροπή σε κεφαλαία (ελληνικά + λατινικά)
+  return text.toLocaleUpperCase('el-GR')
+}
+
 async function sendSmsSmsbox(phone, text, from) {
   const params = new URLSearchParams({
     username: process.env.SMSBOX_USERNAME,
@@ -9,7 +14,6 @@ async function sendSmsSmsbox(phone, text, from) {
     from: from,
     to: phone,
     text,
-    coding: 'UTF8'
   })
 
   const response = await fetch(
@@ -40,9 +44,11 @@ export async function POST(request) {
 
     const phones = JSON.parse(phonesJson)
 
-    const smsText = message
+    const rawText = message
       ? `${message} ${gmbLink}`
       : `Ευχαριστουμε απο ${businessName}! Θα μας βοηθουσατε με μια κριτικη στο Google: ${gmbLink}`
+
+    const smsText = toGreekUpperGsm(rawText)
 
     for (const phone of phones) {
       await sendSmsSmsbox(phone, smsText, businessName)
