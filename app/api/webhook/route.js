@@ -2,22 +2,11 @@ import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
-async function shortenUrl(url) {
-  try {
-    const response = await fetch(
-      `https://tinyurl.com/api-create.php?url=${encodeURIComponent(url)}`
-    )
-    return await response.text()
-  } catch {
-    return url
-  }
-}
-
-async function sendSmsSmsbox(phone, text) {
+async function sendSmsSmsbox(phone, text, from) {
   const params = new URLSearchParams({
     username: process.env.SMSBOX_USERNAME,
     password: process.env.SMSBOX_PASSWORD,
-    from: 'ReviewBoost',
+    from: from,
     to: phone,
     text,
     coding: 'UTF8'
@@ -50,14 +39,13 @@ export async function POST(request) {
     const { phones: phonesJson, gmbLink, businessName, message } = session.metadata
 
     const phones = JSON.parse(phonesJson)
-    const shortLink = await shortenUrl(gmbLink)
 
     const smsText = message
-      ? `${message} ${shortLink}`
-      : `Ευχαριστουμε απο ${businessName}! Θα μας βοηθουσατε με μια κριτικη στο Google: ${shortLink}`
+      ? `${message} ${gmbLink}`
+      : `Ευχαριστουμε απο ${businessName}! Θα μας βοηθουσατε με μια κριτικη στο Google: ${gmbLink}`
 
     for (const phone of phones) {
-      await sendSmsSmsbox(phone, smsText)
+      await sendSmsSmsbox(phone, smsText, businessName)
     }
   }
 
