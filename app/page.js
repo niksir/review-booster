@@ -23,10 +23,10 @@ function extractPhones(text) {
   return lines.filter(p => p.match(/^(\+30|0030|69|2)\d+/))
 }
 
-const ACCESS_CODE = process.env.NEXT_PUBLIC_ACCESS_CODE
-const NO_AUTH = ACCESS_CODE === 'zero'
-
 export default function Home() {
+  const ACCESS_CODE = process.env.NEXT_PUBLIC_ACCESS_CODE
+  const NO_AUTH = ACCESS_CODE === 'zero'
+
   const [authed, setAuthed] = useState(NO_AUTH)
   const [codeInput, setCodeInput] = useState('')
   const [codeError, setCodeError] = useState(false)
