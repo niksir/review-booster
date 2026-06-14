@@ -1,9 +1,10 @@
 export async function POST(request) {
   try {
-    const { phones, gmbLink, businessName, message } = await request.json()
+    const { phones, gmbLink, businessName, message, smsPerRecipient } = await request.json()
 
     const quantity = phones.length
-    const calculatedAmount = Math.round(quantity * 0.09 * 100)
+    const smsCount = smsPerRecipient || 1
+    const calculatedAmount = Math.round(quantity * smsCount * 0.09 * 100)
     const amount = Math.max(calculatedAmount, 50)
     const isMinimum = calculatedAmount < 50
 
@@ -19,7 +20,7 @@ export async function POST(request) {
         'payment_method_types[0]': 'card',
         'line_items[0][price_data][currency]': 'eur',
         'line_items[0][price_data][product_data][name]': 'Review Booster',
-        'line_items[0][price_data][product_data][description]': isMinimum ? 'Ελάχιστη χρέωση' : `${quantity} SMS x 0.09€`,
+        'line_items[0][price_data][product_data][description]': isMinimum ? 'Ελάχιστη χρέωση' : `${quantity} x ${smsCount} SMS x 0.09€`,
         'line_items[0][price_data][unit_amount]': amount.toString(),
         'line_items[0][quantity]': '1',
         'mode': 'payment',
