@@ -23,6 +23,10 @@ function extractPhones(text) {
   return lines.filter(p => p.match(/^(\+30|0030|69|2)\d+/))
 }
 
+function toGreekUpper(text) {
+  return text.toLocaleUpperCase('el-GR')
+}
+
 export default function Home() {
   const ACCESS_CODE = process.env.NEXT_PUBLIC_ACCESS_CODE
   const NO_AUTH = ACCESS_CODE === 'zero'
@@ -93,6 +97,7 @@ export default function Home() {
   const fullText = message + (gmbLink ? ' ' + gmbLink : '')
   const totalChars = countSmsChars(fullText)
   const smsPerRecipient = getSmsCount(totalChars)
+  const previewText = toGreekUpper(fullText)
 
   const calculated = phones.length * smsPerRecipient * 0.09
   const finalAmount = calculated < 0.50 ? 0.50 : calculated
@@ -171,10 +176,10 @@ export default function Home() {
             </p>
 
             <div style={{background: '#f0f4ff', padding: 12, borderRadius: 8, margin: '8px 0 16px', fontSize: 13, overflow: 'hidden'}}>
-              <p style={{margin: '0 0 6px', color: '#888', fontSize: 12}}>ΠΡΟΕΠΙΣΚΟΠΗΣΗ SMS</p>
+              <p style={{margin: '0 0 6px', color: '#888', fontSize: 12}}>ΠΡΟΕΠΙΣΚΟΠΗΣΗ SMS (όπως θα ληφθεί — με κεφαλαία)</p>
               <p style={{margin: '0 0 4px', fontWeight: 'bold', color: '#1a73e8', fontSize: 12}}>Από: {businessName || '—'}</p>
               <p style={{margin: 0, color: '#333', lineHeight: 1.5, wordBreak: 'break-word'}}>
-                {message}{message && gmbLink ? ' ' : ''}{gmbLink || ''}
+                {previewText || '—'}
               </p>
             </div>
 
